@@ -3,7 +3,6 @@ package dev.murphyad.reactivemongo.webfn;
 import dev.murphyad.reactivemongo.domain.Beer;
 import dev.murphyad.reactivemongo.model.BeerDTO;
 import dev.murphyad.reactivemongo.services.BeerServiceImplTest;
-import org.hamcrest.Matchers;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
@@ -14,11 +13,15 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
 import org.springframework.test.web.reactive.server.FluxExchangeResult;
 import org.springframework.test.web.reactive.server.WebTestClient;
+import org.springframework.web.util.UriComponentsBuilder;
 import org.testcontainers.containers.MongoDBContainer;
 import org.testcontainers.junit.jupiter.Container;
 import reactor.core.publisher.Mono;
 
 import java.util.List;
+
+import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.greaterThan;
 
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 @SpringBootTest
@@ -155,7 +158,29 @@ class BeerEndpointTest {
                 .exchange()
                 .expectStatus().isOk()
                 .expectHeader().valueEquals("Content-type", "application/json")
-                .expectBody().jsonPath("$.size()").value(Matchers.greaterThan(1));
+                .expectBody().jsonPath("$.size()").value(greaterThan(1));
+    }
+
+    @Test
+    @Order(2)
+    void testListBeersByStyle() {
+        final String BEER_STYLE = "TEST";
+        BeerDTO testDto = getSavedTestBeer();
+        testDto.setBeerStyle(BEER_STYLE);
+
+        //create test data
+        webTestClient.post().uri(BeerRouterConfig.BEER_PATH)
+                .body(Mono.just(testDto), BeerDTO.class)
+                .header("Content-Type", "application/json")
+                .exchange();
+
+        webTestClient.get().uri(UriComponentsBuilder
+                        .fromPath(BeerRouterConfig.BEER_PATH)
+                        .queryParam("beerStyle", BEER_STYLE).build().toUri())
+                .exchange()
+                .expectStatus().isOk()
+                .expectHeader().valueEquals("Content-type", "application/json")
+                .expectBody().jsonPath("$.size()").value(equalTo(1));
     }
 
     public BeerDTO getSavedTestBeer(){
