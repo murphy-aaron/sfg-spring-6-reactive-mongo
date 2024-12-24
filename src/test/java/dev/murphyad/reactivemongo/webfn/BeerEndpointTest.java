@@ -33,7 +33,7 @@ class BeerEndpointTest {
     WebTestClient webTestClient;
 
     @Test
-    void testPatchIdNotFound() {
+    void testPatchBeerNotFound() {
         webTestClient.patch()
                 .uri(BeerRouterConfig.BEER_PATH_ID, 999)
                 .body(Mono.just(BeerServiceImplTest.getTestBeer()), BeerDTO.class)
@@ -42,14 +42,14 @@ class BeerEndpointTest {
     }
 
     @Test
-    void testPatchIdFound() {
+    void testPatchBeer() {
         BeerDTO beerDTO = getSavedTestBeer();
 
         webTestClient.patch()
                 .uri(BeerRouterConfig.BEER_PATH_ID, beerDTO.getId())
                 .body(Mono.just(beerDTO), BeerDTO.class)
                 .exchange()
-                .expectStatus().isNotFound();
+                .expectStatus().isNoContent();
     }
 
     @Test
@@ -126,7 +126,7 @@ class BeerEndpointTest {
                 .header("Content-Type", "application/json")
                 .exchange()
                 .expectStatus().isCreated()
-                .expectHeader().location("http://localhost:8080/api/v2/beer/4");
+                .expectHeader().exists("location");
     }
 
     @Test
