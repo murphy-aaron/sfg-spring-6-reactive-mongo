@@ -1,7 +1,9 @@
 package dev.murphyad.reactivemongo.bootstrap;
 
 import dev.murphyad.reactivemongo.domain.Beer;
+import dev.murphyad.reactivemongo.domain.Customer;
 import dev.murphyad.reactivemongo.repositories.BeerRepository;
+import dev.murphyad.reactivemongo.repositories.CustomerRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
@@ -17,6 +19,7 @@ import java.time.LocalDateTime;
 public class BootstrapData implements CommandLineRunner {
 
     private final BeerRepository beerRepository;
+    private final CustomerRepository customerRepository;
 
     @Override
     public void run(String... args) throws Exception {
@@ -25,6 +28,11 @@ public class BootstrapData implements CommandLineRunner {
                     loadBeerData();
                 })
                 .subscribe();
+
+        customerRepository.deleteAll()
+                .doOnSuccess(success -> {
+                    loadCustomerData();
+                }).subscribe();
     }
 
     private void loadBeerData() {
@@ -72,6 +80,28 @@ public class BootstrapData implements CommandLineRunner {
                 });
 
                 System.out.println("Loaded Beers: " + beerRepository.count().block());
+            }
+        });
+    }
+
+    private void loadCustomerData() {
+        customerRepository.count().subscribe(count -> {
+            if (count == 0) {
+                Customer customer1 = Customer.builder()
+                        .customerName("Hamilton")
+                        .build();
+
+                Customer customer2 = Customer.builder()
+                        .customerName("Gus")
+                        .build();
+
+                customerRepository.save(customer1).subscribe(customer -> {
+                    System.out.println(customer.toString());
+                });
+                customerRepository.save(customer2).subscribe(customer -> {
+                    System.out.println(customer.toString());
+                });
+                System.out.println("Loaded Customers: " + customerRepository.count().block());
             }
         });
     }
